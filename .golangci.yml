@@ -1,10 +1,10 @@
-linters-settings:
-  custom:
-    logcheck:
-      path: logcheck.so
-      description: reports wrong log messages
-      original-url: ://github.com
-
+version: "2"
 linters:
   enable:
     - logcheck
+  
+  settings:
+    custom:
+      logcheck:
+        path: ./loglint.so
+        description: "Custom linter for log messages"

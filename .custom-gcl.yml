@@ -1,0 +1,4 @@
+version: v2.11.1
+plugins:
+  - module: github.com/EPAS05/loglint/plugin
+    path: ./plugin
