@@ -11,6 +11,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"github.com/golangci/plugin-module-register/register"
 )
 
 var Analyzer = &analysis.Analyzer{
@@ -183,4 +184,10 @@ func checkSensitiveData(s string) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+func init() {
+    register.Plugin("logcheck", func(settings any) (*analysis.Analyzer, error) {
+        return Analyzer, nil
+    })
 }

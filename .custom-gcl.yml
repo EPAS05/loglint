@@ -1,4 +1,5 @@
 version: v2.11.1
 plugins:
-  - module: github.com/EPAS05/loglint/plugin
-    path: ./plugin
+  - module: 'github.com/EPAS05/loglint'
+    import: 'github.com/EPAS05/loglint/logcheck'
+    version: latest

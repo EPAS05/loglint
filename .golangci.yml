@@ -1,10 +1,12 @@
 version: "2"
 linters:
+  default: none
   enable:
     - logcheck
-  
   settings:
     custom:
       logcheck:
-        path: ./loglint.so
+        type: "module"
         description: "Custom linter for log messages"
+        settings:
+          message: hello
