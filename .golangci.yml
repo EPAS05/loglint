@@ -1,0 +1,10 @@
+linters-settings:
+  custom:
+    logcheck:
+      path: logcheck.so
+      description: reports wrong log messages
+      original-url: ://github.com
+
+linters:
+  enable:
+    - logcheck
