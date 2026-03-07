@@ -26,4 +26,4 @@ set your own path to plugin (for example path: /home/yourname/loglint/plugin/log
 8. Use linter
 ./path/to/golangci-lint-cgo run
 
-9. for more info check:
+9. for more info check: https://golangci-lint.run/docs/contributing/new-linters/
