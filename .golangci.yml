@@ -1,12 +1,28 @@
 version: "2"
 linters:
-  default: none
   enable:
     - logcheck
   settings:
     custom:
       logcheck:
-        type: "module"
-        description: "Custom linter for log messages"
-        settings:
-          message: hello
+        path: /home/epas/loglint/loglint/plugin/logcheck.so
+        description: checks wrong logs
+        original-url: github.com/EPAS05/loglint
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

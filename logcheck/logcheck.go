@@ -11,7 +11,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
-	"github.com/golangci/plugin-module-register/register"
 )
 
 var Analyzer = &analysis.Analyzer{
@@ -20,6 +19,7 @@ var Analyzer = &analysis.Analyzer{
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
+
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
@@ -68,8 +68,6 @@ func analyzeMessage(pass *analysis.Pass, call *ast.CallExpr, msgExpr ast.Expr) {
 	if !ok {
 		return
 	}
-
-	//fmt.Println(msg)
 
 	if ok, diag := checkLowercaseStart(msg); ok {
 		pass.Report(analysis.Diagnostic{
@@ -184,10 +182,4 @@ func checkSensitiveData(s string) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-func init() {
-    register.Plugin("logcheck", func(settings any) (*analysis.Analyzer, error) {
-        return Analyzer, nil
-    })
 }

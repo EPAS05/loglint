@@ -1,0 +1,14 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.o
+*.a
+
+logcheck.so                   
+golangci-lint-cgo             
+.golangci.bck.yml
+.golangci-lint/
