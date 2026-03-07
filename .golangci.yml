@@ -8,6 +8,17 @@ linters:
         path: /home/epas/loglint/loglint/plugin/logcheck.so
         description: checks wrong logs
         original-url: github.com/EPAS05/loglint
+        settings:
+          enable_lowercase: true
+          enable_english: true
+          enable_special: true
+          enable_sensitive: true
+          sensitive_words:
+            - "password"
+            - "token"
+            - "secret"
+            - "credit"
+
   exclusions:
     generated: lax
     presets:

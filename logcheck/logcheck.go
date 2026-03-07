@@ -13,36 +13,60 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-var Analyzer = &analysis.Analyzer{
-	Name:     "logcheck",
-	Doc:      "reports wrong log messages",
-	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer},
+type Config struct {
+	EnableLowercase bool `mapstructure:"enable_lowercase"`
+	EnableEnglish bool `mapstructure:"enable_english"`
+	EnableSpecial bool `mapstructure:"enable_special"`
+	EnableSensitive bool `mapstructure:"enable_sensitive"`
+	SensitiveWords []string `mapstructure:"sensitive_words"`
 }
 
-
-func run(pass *analysis.Pass) (interface{}, error) {
-	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-
-	nodeFilter := []ast.Node{
-		(*ast.CallExpr)(nil),
+func DefaultConfig() *Config {
+	return &Config{
+		EnableLowercase: true,
+		EnableEnglish:   true,
+		EnableSpecial:   true,
+		EnableSensitive: true,
+		SensitiveWords: []string{
+			"password", "pass", "pwd", "secret", "token:", "key", "credential",
+		},
 	}
+}
 
-	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		call := n.(*ast.CallExpr)
+var Analyzer = NewAnalyzer(DefaultConfig())
 
-		switch fun := call.Fun.(type) {
-		case *ast.SelectorExpr:
-			if isLoggingFunction(pass, fun) {
-				//pass.Reportf(call.Pos(), "found logging call")
-				if len(call.Args) > 0 {
-					analyzeMessage(pass, call, call.Args[0])
+func NewAnalyzer(cfg *Config) *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name:     "logcheck",
+		Doc:      "reports wrong log messages",
+		Run:      runWithConfig(cfg),
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+	}
+}
+
+func runWithConfig(cfg *Config) func(*analysis.Pass) (interface{}, error) {
+	return func(pass *analysis.Pass) (interface{}, error) {
+		inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+
+		nodeFilter := []ast.Node{
+			(*ast.CallExpr)(nil),
+		}
+
+		inspect.Preorder(nodeFilter, func(n ast.Node) {
+			call := n.(*ast.CallExpr)
+
+			switch fun := call.Fun.(type) {
+			case *ast.SelectorExpr:
+				if isLoggingFunction(pass, fun) {
+					if len(call.Args) > 0 {
+						analyzeMessageWithConfig(pass, call, call.Args[0], cfg)
+					}
 				}
 			}
-		}
-	})
+		})
 
-	return nil, nil
+		return nil, nil
+	}
 }
 
 func isLoggingFunction(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
@@ -63,38 +87,46 @@ func isLoggingFunction(pass *analysis.Pass, sel *ast.SelectorExpr) bool {
 	return false
 }
 
-func analyzeMessage(pass *analysis.Pass, call *ast.CallExpr, msgExpr ast.Expr) {
+func analyzeMessageWithConfig(pass *analysis.Pass, call *ast.CallExpr, msgExpr ast.Expr, cfg *Config) {
 	msg, ok := extractMessageString(pass, msgExpr)
 	if !ok {
 		return
 	}
 
-	if ok, diag := checkLowercaseStart(msg); ok {
-		pass.Report(analysis.Diagnostic{
-			Pos:     call.Pos(),
-			Message: diag,
-		})
+	if cfg.EnableLowercase {
+		if ok, diag := checkLowercaseStart(msg); ok {
+			pass.Report(analysis.Diagnostic{
+				Pos:     call.Pos(),
+				Message: diag,
+			})
+		}
 	}
 
-	if ok, diag := checkEnglishOnly(msg); ok {
-		pass.Report(analysis.Diagnostic{
-			Pos:     call.Pos(),
-			Message: diag,
-		})
+	if cfg.EnableEnglish {
+		if ok, diag := checkEnglishOnly(msg); ok {
+			pass.Report(analysis.Diagnostic{
+				Pos:     call.Pos(),
+				Message: diag,
+			})
+		}
 	}
 
-	if ok, diag := checkSpecialChars(msg); ok {
-		pass.Report(analysis.Diagnostic{
-			Pos:     call.Pos(),
-			Message: diag,
-		})
+	if cfg.EnableSpecial {
+		if ok, diag := checkSpecialChars(msg); ok {
+			pass.Report(analysis.Diagnostic{
+				Pos:     call.Pos(),
+				Message: diag,
+			})
+		}
 	}
 
-	if ok, diag := checkSensitiveData(msg); ok {
-		pass.Report(analysis.Diagnostic{
-			Pos:     call.Pos(),
-			Message: diag,
-		})
+	if cfg.EnableSensitive {
+		if ok, diag := checkSensitiveDataWithConfig(msg, cfg.SensitiveWords); ok {
+			pass.Report(analysis.Diagnostic{
+				Pos:     call.Pos(),
+				Message: diag,
+			})
+		}
 	}
 }
 
@@ -171,12 +203,9 @@ func checkSpecialChars(s string) (bool, string) {
 	return false, ""
 }
 
-func checkSensitiveData(s string) (bool, string) {
+func checkSensitiveDataWithConfig(s string, words []string) (bool, string) {
 	lower := strings.ToLower(s)
-	sensitiveWords := []string{
-		"password", "pass", "pwd", "secret", "token:", "key", "credential",
-	}
-	for _, word := range sensitiveWords {
+	for _, word := range words {
 		if strings.Contains(lower, word) {
 			return true, "log message may contain sensitive data (word: " + word + ")"
 		}
