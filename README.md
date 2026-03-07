@@ -27,3 +27,15 @@ set your own path to plugin (for example path: /home/yourname/loglint/plugin/log
 ./path/to/golangci-lint-cgo run
 
 9. For more info check: https://golangci-lint.run/docs/contributing/new-linters/
+
+
+Use example:
+./golangci-lint-cgo run
+wr.go:6:2: log message should contain only English characters (logcheck)
+        slog.Info("работу")
+        ^
+wr.go:7:2: log message should start with a lowercase letter (logcheck)
+        slog.Info("!!! Important!!!")
+        ^
+wr.go:8:2: log message may contain sensitive data (word: password) (logcheck)
+        slog.Info("password is")
